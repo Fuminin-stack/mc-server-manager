@@ -1,1 +1,1 @@
-# mc_server_manager
+# Launch Minecraft Server using lua
