@@ -1,0 +1,7 @@
+os.execute("stty raw -echo -icanon")
+io.stdin:write("\027", 1)
+io.stdin:write("[", 1)
+io.stdin:write("2", 1)
+io.stdin:write("J", 1)
+io.stdin:flush()
+os.execute("stty sane echo icanon")

@@ -1,36 +1,41 @@
 require "default"
-require "default"
+require "logger"
 
 FINALSET = {}
 
-function exitOnFailure(reason, exit_code)
+local function exitOnFailure(reason, exit_code)
   io.write("Exited, server launching failed, reason: " .. reason .. "\n")
   os.exit(exit_code)
 end
 
-function isEmpty(input)
+local function isEmpty(input)
   return input ~= nil
 end
 
-function isNumber(input)
-  return tonumber(input) ~= nil
-end
-
-function haltCheck(input)
+local function haltCheck(input)
   if input == "stop" then
     exitOnFailure("halt by user.", 0)
   end
 end
 
-function receive_input()
-  
-end
+local function receive_param(parameter, messages, input_analyser)
+  io.write(messages.entry .. "\n")
+  -- loop for parameters
+  while true do
+    local input = ""
+    -- loop for character
+    while true do
+      os.execute("stty -icanon")
+      local char_input = io.stdin:read(1)
+      io.write(char_input)
+      io.flush()
+    end
+  end
 
-function receive_param(parameter, messages, input_analyser)
+
   while true do
     io.write(messages["entry"] .. "\n")
-    
-    local input = io.read()
+    local input = io.stdin.read()
     haltCheck(input)
     if isNumber(input) then 
       return DEFAULT[parameter] 
@@ -54,6 +59,5 @@ for param, def_param in pairs(DEFAULT) do
   FINALSET[param] = receive_param()
 end
 
-io.write("Launching Minecraft server from 'launch.lua'\n")
-
-io.write("java -Xms" .. FINALSET["memory_size"] .. "M -Xmx" .. FINALSET["memory_size"] .. "M -jar " .. DEFAULT["game_loader"] .. " nogui" .. "\n")
+LAUNCH = "java -Xms" .. FINALSET["memory_size"] .. "M -Xmx" .. FINALSET["memory_size"] .. "M -jar ../" .. DEFAULT["game_loader"] .. " nogui" .. "\n"
+io.write(LAUNCH)
