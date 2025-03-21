@@ -7,9 +7,15 @@
 --- @field push fun(self, char: string)
 --- @field pop fun(self): string
 --- @field getPos fun(self): number
---- @field movePos fun(self, increment: number): number Returns the state of execution:
+--- @field movePos fun(self, increment: number): boolean
+--- @field insert fun(self, char: string): number
+--- @field withdraw fun(self): string
+--- @field toEnd fun(self)
+--- @field clear fun(self)
+--- @field writeToio fun(self, target: file*, start_from?: number, stop_at?: number)
 
 StringBuffer = {}
+StringBuffer.__index = StringBuffer
 
 --- Constructor of StringBuffer
 --- @return StringBuffer
@@ -17,7 +23,7 @@ function StringBuffer.new()
   --- @type StringBuffer
   local self = setmetatable({}, StringBuffer)
   self.value = {}
-  self.pos = 0
+  self.pos = 1
   return self
 end
 
@@ -35,11 +41,13 @@ end
 function StringBuffer:push(char)
   local input = self.trimInput(char)
   self.value[#self.value+1] = input
+  self.pos = #self.value+1
 end
 
 function StringBuffer:pop()
   local char = self.value[#self.value]
   self.value[#self.value] = nil
+  self.pos = #self.value+1
   return char
 end
 
@@ -47,21 +55,18 @@ function StringBuffer:getPos()
   return self.pos
 end
 
---- <ul><li>0 for success</li><li>64 for failure</li></ul>
---- @param increment integer
---- @return integer
 function StringBuffer:movePos(increment)
   local resultPos = self.pos + increment
-  if resultPos <= 0 then
-    self.pos = 0
-    return 64
-  elseif resultPos > #self.value then
-    self.pos = #self.value
-    return 64
+  if resultPos < 1 then
+    self.pos = 1
+    return false
+  elseif resultPos > #self.value+1 then
+    self.pos = #self.value+1
+    return false
   else
     self.pos = resultPos
   end
-  return 0
+  return true
 end
 
 function StringBuffer:insert(char)
@@ -69,6 +74,28 @@ function StringBuffer:insert(char)
   self.pos = self.pos + 1
 end
 
+function StringBuffer:withdraw()
+  local char = table.remove(self.value, self.pos-1)
+  self.pos = self.pos-1
+  return char
+end
+
 function StringBuffer:toEnd()
-  self.pos = #self.value
+  self.pos = #self.value+1
+end
+
+function StringBuffer:clear()
+  self.pos = 1
+  self.value = nil
+  self.value = {}
+end
+
+function StringBuffer:writeToio(target, start_from, stop_at)
+  local s = 1
+  local e = #self.value
+  if start_from ~= nil then s = start_from end
+  if stop_at ~= nil then e = stop_at  end
+  for i=s, e do
+    target:write(self.value[i])
+  end
 end

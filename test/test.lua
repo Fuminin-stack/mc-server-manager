@@ -1,7 +1,13 @@
-os.execute("stty raw -echo -icanon")
-io.stdin:write("\027", 1)
-io.stdin:write("[", 1)
-io.stdin:write("2", 1)
-io.stdin:write("J", 1)
-io.stdin:flush()
+local funcs = require("termop").unpack()
+
+funcs.enableRawMode()
+
+while true do
+  local char = io.stdin:read(1)
+  if char == "q" then break end
+  io.stdout:write(char .. char .. "\n");
+  io.stdout:flush();
+end
+
+funcs.disableRawMode()
 os.execute("stty sane echo icanon")
