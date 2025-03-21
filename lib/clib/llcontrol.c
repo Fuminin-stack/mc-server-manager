@@ -5,6 +5,9 @@
 #include <lauxlib.h>
 #include <lualib.h>
 #include <lua.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "llcontrol.h"
 
 static int disableRawMode(lua_State *L) {
@@ -25,6 +28,20 @@ static int enableRawMode(lua_State *L) {
 
 }
 
+static int createFIFO(lua_State *L) {
+  const char* file_location = (char *) lua_tostring(L, -1);
+  mkfifo(file_location, 0666);
+  return 0;
+}
+
+static int deletefile(lua_State *L) {
+  const char* file_location = (char *) lua_tostring(L, -1);
+  if (remove(file_location) != 0) {
+    return luaL_error(L, "Unable to remove %s", file_location);
+  }
+  return 0;
+}
+
 
 static int packFunctions(lua_State *L) {
   lua_newtable(L);
@@ -37,6 +54,14 @@ static int packFunctions(lua_State *L) {
 
   lua_pushstring(L, "enableRawMode");
   lua_pushcclosure(L, enableRawMode, 0);
+  lua_settable(L, -3);
+
+  lua_pushstring(L, "mkfifo");
+  lua_pushcclosure(L, createFIFO, 0);
+  lua_settable(L, -3);
+
+  lua_pushstring(L, "remove");
+  lua_pushcclosure(L, deletefile, 0);
   lua_settable(L, -3);
 
   return 1;
