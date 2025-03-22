@@ -9,6 +9,7 @@ local function clearScreen()
 end
 
 local function enterCycle()
+  llc.mkfifo("../logs/termlog.temp")
   local log = assert(io.open("../logs/termlog.temp", "w"))
   log:setvbuf("no")
   llc.enableRawMode()
@@ -18,6 +19,7 @@ local function enterCycle()
 end
 
 local function exitCycle(log_to_be_closed)
+  llc.remove("../logs/termlog.temp")
   llc.disableRawMode()
   log_to_be_closed:close()
 end
@@ -52,16 +54,16 @@ local function charInterpreter(char, mode, log_target, command_buffer)
 
     local next_char = io.stdin:read(1)
     if next_char == "[" then
-      log_target:write("\n\rsequence mode triggered\n\r")
+      log_target:write("<sequence>")
       retmode = CHAR_INT_EXIT_CODE.sequence
     else
-      log_target:write("\n\rescape key detected\n\r")
+      log_target:write("<escape>")
       command_buffer:insert(next_char)
     end
 
   elseif char == "\n" then
 
-    log_target:write("\n\rcarriage return detected\n\r")
+    log_target:write("<carriage>")
     retmode = CHAR_INT_EXIT_CODE.next_command
 
   elseif char == "\127" then

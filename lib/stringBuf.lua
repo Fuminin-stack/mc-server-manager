@@ -2,7 +2,7 @@
 
 --- @class StringBuffer
 --- @field value table
---- @field pos number
+--- @field pos integer
 --- @field toString fun(self): string
 --- @field push fun(self, char: string)
 --- @field pop fun(self): string
@@ -97,5 +97,16 @@ function StringBuffer:writeToio(target, start_from, stop_at)
   if stop_at ~= nil then e = stop_at  end
   for i=s, e do
     target:write(self.value[i])
+  end
+end
+
+function StringBuffer:split(pos)
+  local splited_buffer = StringBuffer.new()
+  if pos ~= nil then self.pos = pos end
+  local cutpos = self.pos
+  if cutpos > #self.value then return splited_buffer end
+  for i=cutpos, #self.value do
+    self:movePos(1)
+    splited_buffer:push(self:withdraw())
   end
 end
