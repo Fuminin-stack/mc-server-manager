@@ -24,9 +24,18 @@ local function exitCycle(log_to_be_closed)
   log_to_be_closed:close()
 end
 
+local function insert_char(command_buffer, char)
+  command_buffer:insert(char)
+  io.stdout:write("\0277\027[2K\027[0G")
+  command_buffer:writeToio(io.stdout)
+  io.stdout:write("\0278\027[C")
+  io.stdout:flush()
+end
+
 ---@enum char_interpreter_exit_code
 local CHAR_INT_EXIT_CODE = {
-  sequence = "sequence",
+  sequence_bracket = "sequence bracket",
+  sequence_command = "sequence command",
   continue = "continue",
   next_command = "next command"
 }
@@ -40,8 +49,13 @@ local CHAR_INT_EXIT_CODE = {
 local function charInterpreter(char, mode, log_target, command_buffer)
   local retmode = CHAR_INT_EXIT_CODE.continue
 
-  if mode == "sequence" then
-
+  if mode == CHAR_INT_EXIT_CODE.sequence_bracket then
+    if char == "[" then retmode = CHAR_INT_EXIT_CODE.sequence_command
+    else
+      return charInterpreter(char, retmode, log_target, command_buffer)
+    end
+  elseif mode == CHAR_INT_EXIT_CODE.sequence_command then
+    log_target:write("<sequence>")
     if char == "D" then
       if command_buffer:movePos(-1) then io.stdout:write("\027[D") end
     elseif char == "C" then
@@ -52,14 +66,8 @@ local function charInterpreter(char, mode, log_target, command_buffer)
 
   elseif char == "\027" then
 
-    local next_char = io.stdin:read(1)
-    if next_char == "[" then
-      log_target:write("<sequence>")
-      retmode = CHAR_INT_EXIT_CODE.sequence
-    else
-      log_target:write("<escape>")
-      command_buffer:insert(next_char)
-    end
+    log_target:write("<escape>")
+    retmode = CHAR_INT_EXIT_CODE.sequence_bracket
 
   elseif char == "\n" then
 
@@ -75,14 +83,7 @@ local function charInterpreter(char, mode, log_target, command_buffer)
     io.stdout:flush()
 
   else
-
-    log_target:write(char)
-    command_buffer:insert(char)
-    io.stdout:write("\0277\027[2K\027[0G")
-    command_buffer:writeToio(io.stdout)
-    io.stdout:write("\0278\027[C")
-    io.stdout:flush()
-
+    insert_char(command_buffer, char)
   end
 
   return retmode
@@ -115,6 +116,7 @@ end
 
 local function tempInt(input)
   if input == "stop" then return "halt"
+  elseif input == "clear" then clearScreen()
   else return "continue"
   end
 end
